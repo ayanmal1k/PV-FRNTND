@@ -221,6 +221,16 @@ async function createProperty(body: JsonRecord) {
 
   const baseSlug = slugify(body.title);
   const slug = `${baseSlug}-${Date.now().toString(36)}`;
+  // Ensure there's an agents row for this authenticated user.
+  // properties.agent_id references agents.id, so using auth.user.id directly
+  // will violate the FK unless an agent row with that id exists.
+  const { data: existingAgent } = await supabase.from("agents").select("id").eq("user_id", user.id).maybeSingle();
+  let resolvedAgentId: string | null = existingAgent?.id ?? null;
+  if (!resolvedAgentId) {
+    const { data: newAgent, error: agentError } = await supabase.from("agents").insert({ user_id: user.id }).select("id").single();
+    if (agentError) throw agentError;
+    resolvedAgentId = newAgent.id;
+  }
   const propertyPayload = {
     title: body.title,
     slug,
@@ -248,6 +258,7 @@ async function createProperty(body: JsonRecord) {
     featured: Boolean(body.featured),
     trending: Boolean(body.trending),
     created_by: user.id,
+    agent_id: resolvedAgentId,
     published_at: body.status === "ACTIVE" ? new Date().toISOString() : null,
   };
 

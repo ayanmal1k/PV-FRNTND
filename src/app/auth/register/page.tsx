@@ -55,6 +55,27 @@ export default function RegisterPage() {
 
       const session = mapSupabaseSession(data.session);
       setAuth(session.user, session.accessToken, session.refreshToken);
+      // Ensure the new user has an `agents` row so they are treated as an agent.
+      try {
+        const uid = session.user.id;
+        const phoneValue = String(form.get("phone") || "").trim();
+        const { data: existing } = await supabase.from("agents").select("id").eq("user_id", uid).maybeSingle();
+        if (!existing) {
+          const forcedAgencyId = "6a504f11-838d-4def-a979-f97cea4f471b";
+          const agentRow: any = { user_id: uid, agency_id: forcedAgencyId };
+          if (phoneValue) agentRow.whatsapp = phoneValue;
+          const { error: insertErr } = await supabase.from("agents").insert(agentRow);
+          if (insertErr) {
+            // eslint-disable-next-line no-console
+            console.warn("Agent insert failed", insertErr.message || insertErr);
+          }
+        }
+      } catch (e) {
+        // Non-fatal: agent creation failed; user still created. Log to console.
+        // eslint-disable-next-line no-console
+        console.warn("Failed to create agent for new user:", e);
+      }
+
       router.push("/dashboard");
     } catch (err) { setError(formatAuthError((err as Error).message)); }
     finally { setLoading(false); }

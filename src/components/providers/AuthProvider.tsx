@@ -9,10 +9,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const clearAuth = useAuthStore((state) => state.clearAuth);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) return;
-      const session = mapSupabaseSession(data.session);
-      setAuth(session.user, session.accessToken, session.refreshToken);
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (data.session) {
+        const session = mapSupabaseSession(data.session);
+        setAuth(session.user, session.accessToken, session.refreshToken);
+        return;
+      }
+
+      // Try restoring from stored refresh token (fallback)
+      try {
+        const refreshToken = typeof window !== "undefined" ? localStorage.getItem("refreshToken") : null;
+        if (refreshToken) {
+          const { data: setData, error: setErr } = await supabase.auth.setSession({ refresh_token: refreshToken });
+          if (!setErr && setData.session) {
+            const session = mapSupabaseSession(setData.session);
+            setAuth(session.user, session.accessToken, session.refreshToken);
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
