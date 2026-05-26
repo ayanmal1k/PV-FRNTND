@@ -41,6 +41,7 @@ interface PropertyDetail {
   area?: { name: string } | null;
   agent?: {
     id: string;
+    email?: string | null;
     whatsapp?: string | null;
     user: { id: string; firstName: string; lastName: string; avatar?: string | null; phone?: string | null; email?: string | null };
   } | null;
@@ -71,8 +72,6 @@ export function PropertyDetailsClient({ property }: { property: PropertyDetail }
   const [inquiryRole, setInquiryRole] = useState("Buyer/Tenant");
   const [keepInformed, setKeepInformed] = useState(true);
   const [inquiryStatus, setInquiryStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [showPhoneNumber, setShowPhoneNumber] = useState(false);
-
   // Section Refs for Scroll Spy
   const overviewRef = useRef<HTMLDivElement>(null);
   const locationRef = useRef<HTMLDivElement>(null);
@@ -273,11 +272,12 @@ export function PropertyDetailsClient({ property }: { property: PropertyDetail }
   };
 
   const whatsappMessage = `Hi, I am interested in your property "${property.title}" listed on PropVault.`;
-  const whatsappUrl = property.agent?.whatsapp 
-    ? `https://wa.me/${property.agent.whatsapp.replace(/\+/g, "")}?text=${encodeURIComponent(whatsappMessage)}`
+  const contactPhone = property.agent?.whatsapp || property.agent?.user.phone || null;
+  const whatsappUrl = contactPhone
+    ? `https://wa.me/${contactPhone.replace(/\+/g, "").replace(/[^\d]/g, "")}?text=${encodeURIComponent(whatsappMessage)}`
     : `https://wa.me/923009876543?text=${encodeURIComponent(whatsappMessage)}`;
-  const listerPhone = property.agent?.user.phone || property.agent?.whatsapp || "+923009876543";
-  const listerEmail = property.agent?.user.email || "hello@propvault.pk";
+  const listerPhone = contactPhone || "";
+  const listerEmail = property.agent?.email || property.agent?.user.email || "";
   const callUrl = `tel:${listerPhone.replace(/[^\d+]/g, "")}`;
   const emailBody = [
     `Hi, I am interested in your property "${property.title}" listed on PropVault.`,
@@ -692,16 +692,36 @@ export function PropertyDetailsClient({ property }: { property: PropertyDetail }
                   <span>WhatsApp</span>
                 </a>
                 
-                <a
-                  href={callUrl}
-                  className="bg-[#16a34a] hover:bg-[#128a3d] text-white font-extrabold rounded-[3px] py-3 text-xs flex items-center justify-center gap-2 select-none shadow-sm transition-all focus:outline-none decoration-transparent"
-                >
-                  <Phone size={14} />
-                  <span className="truncate max-w-[120px]">
-                    {listerPhone}
-                  </span>
-                </a>
+                {callUrl ? (
+                  <a
+                    href={callUrl}
+                    className="bg-[#16a34a] hover:bg-[#128a3d] text-white font-extrabold rounded-[3px] py-3 text-xs flex items-center justify-center gap-2 select-none shadow-sm transition-all focus:outline-none decoration-transparent"
+                  >
+                    <Phone size={14} />
+                    <span>Contact phone</span>
+                  </a>
+                ) : (
+                  <div className="bg-[#16a34a]/60 text-white font-extrabold rounded-[3px] py-3 text-xs flex items-center justify-center gap-2 select-none shadow-sm opacity-70">
+                    <Phone size={14} />
+                    <span>Call unavailable</span>
+                  </div>
+                )}
               </div>
+
+              {(listerPhone || listerEmail) && (
+                <div className="mb-5 space-y-1 text-[11px] font-medium text-slate-600">
+                  {listerPhone && callUrl && (
+                    <a href={callUrl} className="block truncate hover:text-[#16a34a]">
+                      Phone: {listerPhone}
+                    </a>
+                  )}
+                  {listerEmail && emailUrl && (
+                    <a href={emailUrl} className="block truncate hover:text-[#16a34a]">
+                      Email: {listerEmail}
+                    </a>
+                  )}
+                </div>
+              )}
 
               {/* Inquiry Form */}
               <form onSubmit={handleInquirySubmit} className="space-y-3.5">
@@ -814,7 +834,7 @@ export function PropertyDetailsClient({ property }: { property: PropertyDetail }
                   className="border-[1.5px] border-[#16a34a] text-[#16a34a] hover:bg-emerald-50 active:scale-[0.98] font-black bg-white w-full rounded-[3px] py-2.5 text-xs flex items-center justify-center gap-1.5 uppercase transition-all"
                 >
                   <Mail size={14} />
-                  <span>Send Email</span>
+                  <span>Email lister</span>
                 </button>
               </form>
             </div>

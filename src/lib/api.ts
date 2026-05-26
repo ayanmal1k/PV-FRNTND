@@ -63,6 +63,7 @@ function mapProperty(row: JsonRecord) {
   const images = (row.images ?? row.property_images ?? []).map(mapImage);
   const agency = row.agency ?? row.agencies;
   const agent = row.agent ?? row.agents;
+  const agentUser = agent?.user ?? null;
 
   return {
     ...camel(row),
@@ -79,12 +80,12 @@ function mapProperty(row: JsonRecord) {
       ? {
           ...camel(agent),
           user: {
-            id: agent.user_id ?? agent.id,
-            firstName: "PropVault",
-            lastName: "Agent",
-            avatar: null,
-            phone: agent.whatsapp ?? null,
-            email: agency?.email ?? null,
+            id: agentUser?.id ?? agent.user_id ?? agent.id,
+            firstName: agentUser?.first_name ?? agentUser?.firstName ?? agent.first_name ?? agent.firstName ?? "",
+            lastName: agentUser?.last_name ?? agentUser?.lastName ?? agent.last_name ?? agent.lastName ?? "",
+            avatar: agentUser?.avatar ?? agent.avatar ?? null,
+            phone: agent.whatsapp ?? agentUser?.phone ?? agent.phone ?? null,
+            email: agentUser?.email ?? agent.email ?? null,
           },
         }
       : null,
@@ -119,6 +120,7 @@ function cardSelect() {
     area:areas(*),
     propertyType:property_types(*),
     agency:agencies(*),
+    agent:agents(*),
     property_images(*)
   `;
 }

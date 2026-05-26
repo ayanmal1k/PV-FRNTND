@@ -15,6 +15,13 @@ const btn: React.CSSProperties = {
   borderRadius: 3, padding: "11px 0", fontSize: 14, fontWeight: 700, cursor: "pointer",
 };
 
+function formatAuthError(message: string) {
+  if (message.toLowerCase().includes("password should contain")) {
+    return "Password must be at least 8 characters and include uppercase, lowercase, and a number.";
+  }
+  return message;
+}
+
 export default function RegisterPage() {
   const router = useRouter();
   const setAuth = useAuthStore((s) => s.setAuth);
@@ -49,7 +56,7 @@ export default function RegisterPage() {
       const session = mapSupabaseSession(data.session);
       setAuth(session.user, session.accessToken, session.refreshToken);
       router.push("/dashboard");
-    } catch (err) { setError((err as Error).message); }
+    } catch (err) { setError(formatAuthError((err as Error).message)); }
     finally { setLoading(false); }
   }
 
@@ -74,6 +81,9 @@ export default function RegisterPage() {
           <input name="email" type="email" required placeholder="Email address" style={inp} />
           <input name="phone" placeholder="Phone number (optional)" style={inp} />
           <input name="password" type="password" required minLength={8} placeholder="Password (min 8 characters)" style={inp} />
+          <p style={{ fontSize: 11, color: "#777", margin: "-6px 0 0" }}>
+            Use at least 8 characters with a lowercase letter, an uppercase letter, and a number.
+          </p>
           {error && <p style={{ fontSize: 12, color: "#c00", margin: 0 }}>{error}</p>}
           <button type="submit" disabled={loading} style={btn}>{loading ? "Creating account…" : "Create Account"}</button>
           <p style={{ fontSize: 11, color: "#aaa", textAlign: "center", margin: 0 }}>

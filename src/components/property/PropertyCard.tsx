@@ -22,6 +22,12 @@ export interface PropertyCardData {
   description?: string;
   createdAt?: string;
   agency?: { name: string; logo?: string };
+  agent?: {
+    id: string;
+    email?: string | null;
+    whatsapp?: string | null;
+    user: { id: string; firstName: string; lastName: string; avatar?: string | null; phone?: string | null; email?: string | null };
+  } | null;
   isHot?: boolean;
   isTitanium?: boolean;
 }
@@ -92,6 +98,8 @@ export function PropertyCard({
 
   const loc = [property.area?.name, property.city?.name].filter(Boolean).join(", ");
   const price = formatPrice(property.price);
+  const contactPhone = property.agent?.whatsapp || property.agent?.user.phone || "";
+  const contactEmail = property.agent?.email || property.agent?.user.email || "";
 
   if (variant === "zameen") {
     const photosCount = property.images?.length && property.images.length > 0 ? property.images.length : 13;
@@ -103,9 +111,10 @@ export function PropertyCard({
       : `Looking to buy this property? Well, check out this excellent option. Located ideally in ${loc || "Pakistan"}, it offers a premium standard of living.`;
 
     const whatsappText = `Hi, I am interested in your property "${property.title}" listed for ${price} on PropVault. Please provide more details.`;
-    const whatsappUrl = `https://wa.me/923001234567?text=${encodeURIComponent(whatsappText)}`;
-    const callUrl = `tel:+923001234567`;
-    const emailUrl = `mailto:info@darwaishassociates.com?subject=Inquiry: ${encodeURIComponent(property.title)}`;
+    const whatsappNumber = contactPhone.replace(/\+/g, "").replace(/[^\d]/g, "");
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappText)}`;
+    const callUrl = `tel:${contactPhone.replace(/[^\d+]/g, "")}`;
+    const emailUrl = `mailto:${contactEmail}?subject=${encodeURIComponent(`Inquiry: ${property.title}`)}`;
 
     return (
       <div className={`z-prop-card-horizontal ${className || ""}`}>
@@ -194,7 +203,7 @@ export function PropertyCard({
           {/* Row 8: Footer Buttons & Agency Logo */}
           <div className="z-prop-horizontal-footer">
             <div className="z-prop-horizontal-btns">
-              <a href={emailUrl} className="z-btn z-btn-email" title="Email Agent">
+              <a href={emailUrl} className="z-btn z-btn-email" title={contactEmail}>
                 <Mail size={15} />
               </a>
               <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="z-btn z-btn-whatsapp">
@@ -203,11 +212,23 @@ export function PropertyCard({
                 </svg>
                 WhatsApp
               </a>
-              <a href={callUrl} className="z-btn z-btn-call">
+              <a href={callUrl} className="z-btn z-btn-call" title={contactPhone}>
                 <Phone size={14} style={{ marginRight: 4 }} />
-                CALL
+                Contact phone
               </a>
             </div>
+            {(contactPhone || contactEmail) && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 2, fontSize: 10, color: "#666", minWidth: 0 }}>
+                <a href={callUrl} style={{ color: "inherit", textDecoration: "none" }} title={contactPhone}>
+                  Phone: <span style={{ wordBreak: "break-all" }}>{contactPhone}</span>
+                </a>
+                {contactEmail && (
+                  <a href={emailUrl ?? undefined} style={{ color: "inherit", textDecoration: "none" }} title={contactEmail}>
+                    Email: <span style={{ wordBreak: "break-all" }}>{contactEmail}</span>
+                  </a>
+                )}
+              </div>
+            )}
             {/* Agency logo display */}
             <div className="z-prop-horizontal-agency" title={property.agency?.name ?? "Darwaish Associates"}>
               {property.agency?.logo ? (
