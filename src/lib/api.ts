@@ -85,7 +85,7 @@ function mapProperty(row: JsonRecord) {
             lastName: agentUser?.last_name ?? agentUser?.lastName ?? agent.last_name ?? agent.lastName ?? "",
             avatar: agentUser?.avatar ?? agent.avatar ?? null,
             phone: agent.whatsapp ?? agentUser?.phone ?? agent.phone ?? null,
-            email: agentUser?.email ?? agent.email ?? null,
+            email: agent.email ?? agentUser?.email ?? null,
           },
         }
       : null,
@@ -224,12 +224,19 @@ async function createProperty(body: JsonRecord) {
   // Ensure there's an agents row for this authenticated user.
   // properties.agent_id references agents.id, so using auth.user.id directly
   // will violate the FK unless an agent row with that id exists.
-  const { data: existingAgent } = await supabase.from("agents").select("id").eq("user_id", user.id).maybeSingle();
+  const { data: existingAgent } = await supabase.from("agents").select("id,email").eq("user_id", user.id).maybeSingle();
   let resolvedAgentId: string | null = existingAgent?.id ?? null;
+  const sessionEmail = user.email ?? null;
   if (!resolvedAgentId) {
-    const { data: newAgent, error: agentError } = await supabase.from("agents").insert({ user_id: user.id }).select("id").single();
+    const { data: newAgent, error: agentError } = await supabase
+      .from("agents")
+      .insert({ user_id: user.id, email: sessionEmail })
+      .select("id")
+      .single();
     if (agentError) throw agentError;
     resolvedAgentId = newAgent.id;
+  } else if (!existingAgent.email && sessionEmail) {
+    void supabase.from("agents").update({ email: sessionEmail }).eq("id", resolvedAgentId);
   }
   const propertyPayload = {
     title: body.title,

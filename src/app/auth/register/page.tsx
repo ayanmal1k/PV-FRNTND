@@ -59,11 +59,13 @@ export default function RegisterPage() {
       try {
         const uid = session.user.id;
         const phoneValue = String(form.get("phone") || "").trim();
+        const emailValue = String(form.get("email") || "").trim();
         const { data: existing } = await supabase.from("agents").select("id").eq("user_id", uid).maybeSingle();
         if (!existing) {
           const forcedAgencyId = "6a504f11-838d-4def-a979-f97cea4f471b";
           const agentRow: any = { user_id: uid, agency_id: forcedAgencyId };
           if (phoneValue) agentRow.whatsapp = phoneValue;
+          if (emailValue) agentRow.email = emailValue;
           const { error: insertErr } = await supabase.from("agents").insert(agentRow);
           if (insertErr) {
             // eslint-disable-next-line no-console

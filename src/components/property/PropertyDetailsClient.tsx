@@ -278,7 +278,7 @@ export function PropertyDetailsClient({ property }: { property: PropertyDetail }
     ? `https://wa.me/${listingAgentWhatsappDigits}?text=${encodeURIComponent(whatsappMessage)}`
     : "";
   const listerPhone = listingAgentWhatsapp;
-  const listerEmail = property.agent?.user.email?.trim() || "";
+  const listerEmail = property.agent?.email?.trim() || "";
   const callUrl = listerPhone ? `tel:${listerPhone.replace(/[^\d+]/g, "")}` : "";
   const emailBody = [
     `Hi, I am interested in your property "${property.title}" listed on PropVault.`,

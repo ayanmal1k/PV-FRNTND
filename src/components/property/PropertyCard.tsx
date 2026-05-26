@@ -99,7 +99,7 @@ export function PropertyCard({
   const loc = [property.area?.name, property.city?.name].filter(Boolean).join(", ");
   const price = formatPrice(property.price);
   const contactPhone = property.agent?.whatsapp?.trim() || "";
-  const contactEmail = property.agent?.user.email?.trim() || "";
+  const contactEmail = property.agent?.email?.trim() || "";
 
   if (variant === "zameen") {
     const photosCount = property.images?.length && property.images.length > 0 ? property.images.length : 13;
