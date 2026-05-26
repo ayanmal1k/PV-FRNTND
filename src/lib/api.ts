@@ -235,7 +235,7 @@ async function createProperty(body: JsonRecord) {
       .single();
     if (agentError) throw agentError;
     resolvedAgentId = newAgent.id;
-  } else if (!existingAgent.email && sessionEmail) {
+  } else if (!existingAgent?.email && sessionEmail) {
     void supabase.from("agents").update({ email: sessionEmail }).eq("id", resolvedAgentId);
   }
   const propertyPayload = {
