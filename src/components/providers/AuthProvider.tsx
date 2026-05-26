@@ -20,9 +20,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const refreshToken = typeof window !== "undefined" ? localStorage.getItem("refreshToken") : null;
         if (refreshToken) {
-          const { data: setData, error: setErr } = await supabase.auth.setSession({ refresh_token: refreshToken });
-          if (!setErr && setData.session) {
-            const session = mapSupabaseSession(setData.session);
+          const { data: refreshedData, error: refreshErr } = await supabase.auth.refreshSession({ refresh_token: refreshToken });
+          if (!refreshErr && refreshedData.session) {
+            const session = mapSupabaseSession(refreshedData.session);
             setAuth(session.user, session.accessToken, session.refreshToken);
           }
         }
