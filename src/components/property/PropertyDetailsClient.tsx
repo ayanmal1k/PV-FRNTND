@@ -168,29 +168,7 @@ export function PropertyDetailsClient({ property }: { property: PropertyDetail }
   // Handle Inquiry Form Submit
   const handleInquirySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setInquiryStatus("loading");
-    try {
-      await api("/leads/inquiry", {
-        method: "POST",
-        body: JSON.stringify({
-          propertyId: property.id,
-          agentId: property.agent?.id,
-          name: inquiryName,
-          email: inquiryEmail,
-          phone: inquiryPhone,
-          body: inquiryMsg,
-          role: inquiryRole,
-          keepInformed: keepInformed,
-        })
-      });
-      setInquiryStatus("success");
-    } catch (err) {
-      // Mock success if API is not running, but output warning
-      console.warn("Inquiry API failed. Simulating submission success.", err);
-      setTimeout(() => {
-        setInquiryStatus("success");
-      }, 1000);
-    }
+    window.location.href = emailUrl;
   };
 
   // Image slider navigation
@@ -298,6 +276,19 @@ export function PropertyDetailsClient({ property }: { property: PropertyDetail }
   const whatsappUrl = property.agent?.whatsapp 
     ? `https://wa.me/${property.agent.whatsapp.replace(/\+/g, "")}?text=${encodeURIComponent(whatsappMessage)}`
     : `https://wa.me/923009876543?text=${encodeURIComponent(whatsappMessage)}`;
+  const listerPhone = property.agent?.user.phone || property.agent?.whatsapp || "+923009876543";
+  const listerEmail = property.agent?.user.email || "hello@propvault.pk";
+  const callUrl = `tel:${listerPhone.replace(/[^\d+]/g, "")}`;
+  const emailBody = [
+    `Hi, I am interested in your property "${property.title}" listed on PropVault.`,
+    "",
+    `Name: ${inquiryName || "N/A"}`,
+    `Email: ${inquiryEmail || "N/A"}`,
+    `Phone: ${inquiryPhone || "N/A"}`,
+    "",
+    inquiryMsg || "",
+  ].join("\n");
+  const emailUrl = `mailto:${listerEmail}?subject=${encodeURIComponent(`Inquiry about ${property.title}`)}&body=${encodeURIComponent(emailBody)}`;
 
   return (
     <div className="bg-[#f5f5f5] min-height-[90vh]">
@@ -701,15 +692,15 @@ export function PropertyDetailsClient({ property }: { property: PropertyDetail }
                   <span>WhatsApp</span>
                 </a>
                 
-                <button 
-                  onClick={() => setShowPhoneNumber(!showPhoneNumber)}
-                  className="bg-[#16a34a] hover:bg-[#128a3d] text-white font-extrabold rounded-[3px] py-3 text-xs flex items-center justify-center gap-2 select-none shadow-sm transition-all focus:outline-none"
+                <a
+                  href={callUrl}
+                  className="bg-[#16a34a] hover:bg-[#128a3d] text-white font-extrabold rounded-[3px] py-3 text-xs flex items-center justify-center gap-2 select-none shadow-sm transition-all focus:outline-none decoration-transparent"
                 >
                   <Phone size={14} />
                   <span className="truncate max-w-[120px]">
-                    {showPhoneNumber ? (property.agent?.user.phone || "+923009876543") : "Call"}
+                    {listerPhone}
                   </span>
-                </button>
+                </a>
               </div>
 
               {/* Inquiry Form */}
@@ -816,19 +807,15 @@ export function PropertyDetailsClient({ property }: { property: PropertyDetail }
 
                 {/* Submit Email Button */}
                 <button
-                  type="submit"
-                  disabled={inquiryStatus === "loading"}
+                  type="button"
+                  onClick={() => {
+                    window.location.href = emailUrl;
+                  }}
                   className="border-[1.5px] border-[#16a34a] text-[#16a34a] hover:bg-emerald-50 active:scale-[0.98] font-black bg-white w-full rounded-[3px] py-2.5 text-xs flex items-center justify-center gap-1.5 uppercase transition-all"
                 >
                   <Mail size={14} />
-                  <span>{inquiryStatus === "loading" ? "Sending..." : "Send Email"}</span>
+                  <span>Send Email</span>
                 </button>
-
-                {inquiryStatus === "success" && (
-                  <p className="text-xs text-center text-emerald-600 font-bold bg-emerald-50/50 p-2 rounded border border-emerald-100">
-                    Inquiry sent successfully!
-                  </p>
-                )}
               </form>
             </div>
 
